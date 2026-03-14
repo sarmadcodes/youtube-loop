@@ -27,7 +27,7 @@ body {
     linear-gradient(180deg, #edf0f3 0%, #e8ebef 48%, #e4e8ed 100%);
   color: var(--text);
   font-family: var(--sans);
-  font-weight: 600;
+  font-weight: 700;
   min-height: 100vh;
 }
 
@@ -48,8 +48,8 @@ header {
 
 .logo {
   font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text);
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -57,7 +57,7 @@ header {
 
 .tagline {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted-light);
 }
@@ -90,10 +90,7 @@ main {
     padding-right: 4px;
   }
 
-  .queue-section::-webkit-scrollbar {
-    width: 8px;
-  }
-
+  .queue-section::-webkit-scrollbar { width: 8px; }
   .queue-section::-webkit-scrollbar-thumb {
     background: #c8ced5;
     border-radius: 8px;
@@ -119,7 +116,7 @@ main {
   border-radius: 6px;
   padding: 11px 14px;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text);
   outline: none;
@@ -136,7 +133,7 @@ main {
   border-radius: 6px;
   width: 42px;
   font-size: 20px;
-  font-weight: 300;
+  font-weight: 400;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -148,7 +145,8 @@ main {
 
 .error {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--red);
 }
 
@@ -174,20 +172,14 @@ main {
 
 .player-placeholder span {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--muted-light);
   letter-spacing: 0.1em;
 }
 
-#yt-player {
-  width: 100%;
-  height: 100%;
-}
-
-#yt-player iframe {
-  width: 100% !important;
-  height: 100% !important;
-}
+#yt-player { width: 100%; height: 100%; }
+#yt-player iframe { width: 100% !important; height: 100% !important; }
 
 /* Controls */
 .controls {
@@ -202,10 +194,10 @@ main {
   border-radius: 6px;
   color: var(--text);
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.08em;
-  padding: 8px 18px;
+  padding: 9px 20px;
   cursor: pointer;
   transition: border-color 0.15s;
 }
@@ -223,8 +215,8 @@ main {
 
 .loop-tag {
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted-light);
   letter-spacing: 0.1em;
 }
@@ -244,8 +236,8 @@ main {
 
 .queue-label {
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -255,7 +247,8 @@ main {
   background: none;
   border: none;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted-light);
   cursor: pointer;
   letter-spacing: 0.08em;
@@ -312,7 +305,8 @@ main {
 
 .q-index {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted-light);
   width: 20px;
   flex-shrink: 0;
@@ -323,7 +317,7 @@ main {
 .q-id {
   font-family: var(--mono);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text);
   flex: 1;
   overflow: hidden;
@@ -333,7 +327,8 @@ main {
 
 .q-status {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted);
   width: 14px;
   flex-shrink: 0;
@@ -344,7 +339,7 @@ main {
   border: none;
   color: var(--muted-light);
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
   flex-shrink: 0;
   transition: color 0.15s;
@@ -352,6 +347,7 @@ main {
 }
 .btn-remove:hover { color: var(--red); }
 
+/* Responsive */
 @media (max-width: 900px) {
   .app {
     max-width: 760px;
@@ -372,23 +368,17 @@ main {
     gap: 4px;
   }
 
-  main {
-    gap: 16px;
-  }
+  main { gap: 16px; }
 
-  .input-row {
-    gap: 6px;
-  }
+  .input-row { gap: 6px; }
 
   .input-row input {
     min-width: 0;
     padding: 10px 12px;
-    font-size: 11px;
+    font-size: 12px;
   }
 
-  .btn-add {
-    width: 40px;
-  }
+  .btn-add { width: 40px; }
 
   .controls {
     gap: 6px;
@@ -401,9 +391,7 @@ main {
     padding: 8px 12px;
   }
 
-  .spacer {
-    display: none;
-  }
+  .spacer { display: none; }
 
   .loop-tag {
     width: 100%;
@@ -415,21 +403,15 @@ main {
     gap: 8px;
   }
 
-  .q-id {
-    font-size: 11px;
-  }
+  .q-id { font-size: 11px; }
 }
 
 @media (max-width: 380px) {
-  .logo {
-    font-size: 12px;
-  }
+  .logo { font-size: 12px; }
 
   .tagline,
   .queue-label,
-  .loop-tag {
-    font-size: 9px;
-  }
+  .loop-tag { font-size: 10px; }
 
   .btn-ctrl {
     min-width: 0;
@@ -439,7 +421,5 @@ main {
 
   .q-index,
   .q-status,
-  .btn-remove {
-    font-size: 10px;
-  }
+  .btn-remove { font-size: 10px; }
 }
