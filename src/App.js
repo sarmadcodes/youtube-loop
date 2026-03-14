@@ -61,7 +61,18 @@ function SortableQueueItem({ item, index, isActive, onRemove }) {
 }
 
 export default function App() {
-  const [queue, setQueue] = useState([]);
+  const [queue, setQueue] = useState(() => {
+    try {
+      const saved = localStorage.getItem("yt-loop-queue");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [loopEnabled, setLoopEnabled] = useState(() => {
+    try {
+      const saved = localStorage.getItem("yt-loop-enabled");
+      return saved === null ? true : JSON.parse(saved);
+    } catch { return true; }
+  });
   const [currentUid, setCurrentUid] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [inputVal, setInputVal] = useState("");
@@ -71,9 +82,21 @@ export default function App() {
   const apiReadyRef = useRef(false);
   const queueRef = useRef(queue);
   const currentUidRef = useRef(currentUid);
+  const loopRef = useRef(loopEnabled);
 
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { currentUidRef.current = currentUid; }, [currentUid]);
+  useEffect(() => { loopRef.current = loopEnabled; }, [loopEnabled]);
+
+  // persist queue to localStorage
+  useEffect(() => {
+    try { localStorage.setItem("yt-loop-queue", JSON.stringify(queue)); } catch {}
+  }, [queue]);
+
+  // persist loop toggle
+  useEffect(() => {
+    try { localStorage.setItem("yt-loop-enabled", JSON.stringify(loopEnabled)); } catch {}
+  }, [loopEnabled]);
 
   useEffect(() => {
     if (window.YT && window.YT.Player) { apiReadyRef.current = true; return; }
@@ -106,6 +129,8 @@ export default function App() {
             const cur = currentUidRef.current;
             const idx = q2.findIndex((i) => i.uid === cur);
             if (q2.length === 0) return;
+            const isLast = idx === q2.length - 1;
+            if (isLast && !loopRef.current) return; // stop if loop off and last video
             const nextIdx = (idx + 1) % q2.length;
             playByUid(q2[nextIdx].uid);
           }
@@ -189,6 +214,13 @@ export default function App() {
               placeholder="paste youtube link…"
               spellCheck={false}
             />
+            <button
+              className={`btn-loop-toggle ${loopEnabled ? "on" : "off"}`}
+              onClick={() => setLoopEnabled((v) => !v)}
+              title={loopEnabled ? "Loop on" : "Loop off"}
+            >
+              ↻ {loopEnabled ? "loop on" : "loop off"}
+            </button>
             <button className="btn-add" onClick={addLink}>+</button>
           </div>
           {error && <p className="error">{error}</p>}
@@ -211,7 +243,6 @@ export default function App() {
             <button className="btn-ctrl" onClick={() => skip(1)} disabled={queue.length < 2}>next</button>
           )}
           <div className="spacer" />
-          <span className="loop-tag">↻ loop</span>
         </div>
 
         <div className="queue-section">
