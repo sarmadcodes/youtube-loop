@@ -30,6 +30,15 @@ function extractVideoId(raw) {
   return null;
 }
 
+async function fetchTitle(videoId) {
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.title || null;
+  } catch { return null; }
+}
+
 function uid() {
   return Math.random().toString(36).slice(2, 9);
 }
@@ -53,7 +62,10 @@ function SortableQueueItem({ item, index, isActive, onRemove }) {
     >
       <span className="drag-handle" {...attributes} {...listeners}>⠿</span>
       <span className="q-index">{String(index + 1).padStart(2, "0")}</span>
-      <span className="q-id">{item.id}</span>
+      <span className="q-id">
+        {item.title || item.id}
+        {!item.title && <span className="q-loading">…</span>}
+      </span>
       <span className="q-status">{isActive ? "▶" : ""}</span>
       <button className="btn-remove" onClick={() => onRemove(item.uid)}>✕</button>
     </div>
@@ -88,7 +100,22 @@ export default function App() {
   useEffect(() => { currentUidRef.current = currentUid; }, [currentUid]);
   useEffect(() => { loopRef.current = loopEnabled; }, [loopEnabled]);
 
-  // persist queue to localStorage
+  // fetch titles for any queue items missing one
+  useEffect(() => {
+    queue.forEach((item) => {
+      if (!item.title) {
+        fetchTitle(item.id).then((title) => {
+          if (title) {
+            setQueue((prev) =>
+              prev.map((i) => i.uid === item.uid ? { ...i, title } : i)
+            );
+          }
+        });
+      }
+    });
+  }, [queue.length]); // eslint-disable-line
+
+  // persist queue
   useEffect(() => {
     try { localStorage.setItem("yt-loop-queue", JSON.stringify(queue)); } catch {}
   }, [queue]);
@@ -130,7 +157,7 @@ export default function App() {
             const idx = q2.findIndex((i) => i.uid === cur);
             if (q2.length === 0) return;
             const isLast = idx === q2.length - 1;
-            if (isLast && !loopRef.current) return; // stop if loop off and last video
+            if (isLast && !loopRef.current) return;
             const nextIdx = (idx + 1) % q2.length;
             playByUid(q2[nextIdx].uid);
           }
@@ -139,15 +166,21 @@ export default function App() {
     });
   }, []);
 
-  function addLink() {
+  async function addLink() {
     const val = inputVal.trim();
     if (!val) return;
     const id = extractVideoId(val);
     if (!id) { setError("invalid youtube url"); return; }
     if (queue.find((q) => q.id === id)) { setError("already in queue"); return; }
     setError("");
-    setQueue((prev) => [...prev, { uid: uid(), id, url: val }]);
+    const newItem = { uid: uid(), id, url: val, title: null };
+    setQueue((prev) => [...prev, newItem]);
     setInputVal("");
+    // fetch title immediately
+    const title = await fetchTitle(id);
+    if (title) {
+      setQueue((prev) => prev.map((i) => i.uid === newItem.uid ? { ...i, title } : i));
+    }
   }
 
   function removeItem(targetUid) {
@@ -217,7 +250,6 @@ export default function App() {
             <button
               className={`btn-loop-toggle ${loopEnabled ? "on" : "off"}`}
               onClick={() => setLoopEnabled((v) => !v)}
-              title={loopEnabled ? "Loop on" : "Loop off"}
             >
               ↻ {loopEnabled ? "loop on" : "loop off"}
             </button>

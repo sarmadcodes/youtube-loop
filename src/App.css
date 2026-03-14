@@ -453,3 +453,10 @@ main {
 }
 
 .btn-loop-toggle:hover { opacity: 0.8; }
+
+/* Title loading indicator */
+.q-loading {
+  color: var(--muted-light);
+  font-weight: 400;
+  margin-left: 2px;
+}
