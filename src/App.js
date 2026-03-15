@@ -15,7 +15,27 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { initializeApp } from "firebase/app";
+import {
+  getFirestore,
+  doc,
+  onSnapshot,
+  setDoc,
+} from "firebase/firestore";
 import "./App.css";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC-LCNYTSH2YPk1ZcZoQrYV74u5HVEIYlU",
+  authDomain: "loop-e6b5f.firebaseapp.com",
+  projectId: "loop-e6b5f",
+  storageBucket: "loop-e6b5f.firebasestorage.app",
+  messagingSenderId: "503116798245",
+  appId: "1:503116798245:web:29fceea5f90f9ba7fc22cc",
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+const SESSION_ID = "my-personal-queue";
 
 function extractVideoId(raw) {
   const url = raw.trim();
@@ -32,7 +52,9 @@ function extractVideoId(raw) {
 
 async function fetchTitle(videoId) {
   try {
-    const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+    const res = await fetch(
+      `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+    );
     if (!res.ok) return null;
     const data = await res.json();
     return data.title || null;
@@ -73,34 +95,54 @@ function SortableQueueItem({ item, index, isActive, onRemove }) {
 }
 
 export default function App() {
-  const [queue, setQueue] = useState(() => {
-    try {
-      const saved = localStorage.getItem("yt-loop-queue");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
-  const [loopEnabled, setLoopEnabled] = useState(() => {
-    try {
-      const saved = localStorage.getItem("yt-loop-enabled");
-      return saved === null ? true : JSON.parse(saved);
-    } catch { return true; }
-  });
+  const [queue, setQueue] = useState([]);
+  const [loopEnabled, setLoopEnabled] = useState(true);
   const [currentUid, setCurrentUid] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [inputVal, setInputVal] = useState("");
   const [error, setError] = useState("");
+  const [syncing, setSyncing] = useState(true);
+
   const playerRef = useRef(null);
   const playerDivRef = useRef(null);
   const apiReadyRef = useRef(false);
   const queueRef = useRef(queue);
   const currentUidRef = useRef(currentUid);
   const loopRef = useRef(loopEnabled);
+  const remoteWriteRef = useRef(false);
 
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { currentUidRef.current = currentUid; }, [currentUid]);
   useEffect(() => { loopRef.current = loopEnabled; }, [loopEnabled]);
 
-  // fetch titles for any queue items missing one
+  // Firestore real-time listener
+  useEffect(() => {
+    const ref = doc(db, "sessions", SESSION_ID);
+    const unsub = onSnapshot(ref, (snap) => {
+      setSyncing(false);
+      if (!snap.exists()) return;
+      const data = snap.data();
+      remoteWriteRef.current = true;
+      setQueue(data.queue || []);
+      setLoopEnabled(data.loopEnabled ?? true);
+      remoteWriteRef.current = false;
+    });
+    return () => unsub();
+  }, []);
+
+  // Save to Firestore
+  const saveTimeout = useRef(null);
+  useEffect(() => {
+    if (remoteWriteRef.current) return;
+    clearTimeout(saveTimeout.current);
+    saveTimeout.current = setTimeout(async () => {
+      try {
+        await setDoc(doc(db, "sessions", SESSION_ID), { queue, loopEnabled }, { merge: true });
+      } catch (e) { console.error(e); }
+    }, 500);
+  }, [queue, loopEnabled]);
+
+  // Fetch missing titles
   useEffect(() => {
     queue.forEach((item) => {
       if (!item.title) {
@@ -115,16 +157,7 @@ export default function App() {
     });
   }, [queue.length]); // eslint-disable-line
 
-  // persist queue
-  useEffect(() => {
-    try { localStorage.setItem("yt-loop-queue", JSON.stringify(queue)); } catch {}
-  }, [queue]);
-
-  // persist loop toggle
-  useEffect(() => {
-    try { localStorage.setItem("yt-loop-enabled", JSON.stringify(loopEnabled)); } catch {}
-  }, [loopEnabled]);
-
+  // YouTube API
   useEffect(() => {
     if (window.YT && window.YT.Player) { apiReadyRef.current = true; return; }
     window.onYouTubeIframeAPIReady = () => { apiReadyRef.current = true; };
@@ -176,7 +209,6 @@ export default function App() {
     const newItem = { uid: uid(), id, url: val, title: null };
     setQueue((prev) => [...prev, newItem]);
     setInputVal("");
-    // fetch title immediately
     const title = await fetchTitle(id);
     if (title) {
       setQueue((prev) => prev.map((i) => i.uid === newItem.uid ? { ...i, title } : i));
@@ -235,6 +267,7 @@ export default function App() {
       <header>
         <span className="logo">loop</span>
         <span className="tagline">youtube queue player</span>
+        {syncing && <span className="sync-badge">syncing…</span>}
       </header>
 
       <main>
