@@ -110,6 +110,7 @@ export default function App() {
   const currentUidRef = useRef(currentUid);
   const loopRef = useRef(loopEnabled);
   const remoteWriteRef = useRef(false);
+  const loadedRef = useRef(false);
 
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { currentUidRef.current = currentUid; }, [currentUid]);
@@ -120,6 +121,7 @@ export default function App() {
     const ref = doc(db, "sessions", SESSION_ID);
     const unsub = onSnapshot(ref, (snap) => {
       setSyncing(false);
+      loadedRef.current = true;
       if (!snap.exists()) return;
       const data = snap.data();
       remoteWriteRef.current = true;
@@ -133,7 +135,7 @@ export default function App() {
   // Save to Firestore
   const saveTimeout = useRef(null);
   useEffect(() => {
-    if (remoteWriteRef.current) return;
+    if (remoteWriteRef.current || !loadedRef.current) return;
     clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(async () => {
       try {
